@@ -76,10 +76,15 @@ export interface GrepInput {
   readonly signal?: AbortSignal
 }
 
+export interface SearchResult<T> {
+  readonly items: T[]
+  readonly truncated: boolean
+}
+
 export interface Interface {
   readonly find: (input: FindInput) => Effect.Effect<readonly Entry[], Error>
-  readonly glob: (input: GlobInput) => Effect.Effect<readonly Entry[], Error>
-  readonly grep: (input: GrepInput) => Effect.Effect<readonly Match[], Error | InvalidPatternError>
+  readonly glob: (input: GlobInput) => Effect.Effect<SearchResult<Entry>, Error>
+  readonly grep: (input: GrepInput) => Effect.Effect<SearchResult<Match>, Error | InvalidPatternError>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@opencode/v2/Ripgrep") {}
@@ -174,14 +179,15 @@ const layer = Layer.effect(
                 .replaceAll("\\", "/"),
             ),
         }).pipe(
-          Effect.map((result) =>
-            result.items.map((relative) =>
+          Effect.map((result) => ({
+            items: result.items.map((relative) =>
               Entry.make({
                 path: RelativePath.make(relative),
                 type: "file",
               }),
             ),
-          ),
+            truncated: result.truncated,
+          })),
           Effect.catchTag("Ripgrep.InvalidPatternError", (cause) => Effect.fail(failure(cause.message, cause))),
         ),
       find: (input) =>
@@ -251,8 +257,8 @@ const layer = Layer.effect(
               }),
             ),
         }).pipe(
-          Effect.map((result) =>
-            result.items.map((match) => {
+          Effect.map((result) => ({
+            items: result.items.map((match) => {
               const relative = match.path.text
                 .replace(/^(?:\.[\\/])+/u, "")
                 .replace(/^[\\/]+/u, "")
@@ -275,7 +281,8 @@ const layer = Layer.effect(
                 })),
               })
             }),
-          ),
+            truncated: result.truncated,
+          })),
         ),
     })
   }),

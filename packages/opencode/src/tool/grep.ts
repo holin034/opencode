@@ -66,9 +66,9 @@ export const GrepTool = Tool.define(
             include: params.include,
             limit: 100,
           })
-          if (result.length === 0) return empty
+          if (result.items.length === 0) return empty
 
-          const rows = result.map((item) => ({
+          const rows = result.items.map((item) => ({
             path: path.resolve(
               requestedInfo?.type === "Directory" ? requested : path.dirname(requested),
               item.entry.path,
@@ -77,13 +77,12 @@ export const GrepTool = Tool.define(
             text: item.text,
           }))
 
-          const limit = 100
-          const truncated = rows.length === limit
+          const truncated = result.truncated
           const final = rows
           if (final.length === 0) return empty
 
           const total = rows.length
-          const hasMore = truncated || result.length === limit
+          const hasMore = truncated
           const output = [`Found ${total} matches${hasMore ? " (more matches available)" : ""}`]
 
           let current = ""
