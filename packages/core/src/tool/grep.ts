@@ -104,7 +104,7 @@ const layer = Layer.effectDiscard(
                 })
                 .pipe(
                   Effect.map((result) =>
-                    result.map((match) =>
+                    result.items.map((match) =>
                       FileSystem.Match.make({
                         ...match,
                         entry: FileSystem.Entry.make({
