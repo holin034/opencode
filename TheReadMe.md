@@ -1,3 +1,10 @@
+From the repository root:
+
+```bash
+bun install
+bun run dev
+```
+
 **Issue 12**:
 **Change:** MCP calls show `server > tool`, custom-file calls show
 `namespace > export`, followed by bounded summaries of notable
@@ -68,4 +75,4 @@ The focused checks cover 0 matches, exactly the limit, and one over the limit. T
 
 **Limits:** The change only affects grep, glob, and the `/find` text-search path. `/find/file` is unchanged. Existing callers that do not need truncation information continue to receive arrays through their wrappers, and the `/find` response body stays backward compatible.
 
-**Team integration:** Issue #1 was merged into the team’s `main` branch. The combined version passed the repository typecheck with 30 successful tasks. After the remaining teammates’ changes are fully integrated, rerun the focused search tests and typecheck on the final combined commit.
+**Team integration:** Issue #1 was merged into the team’s `main` branch. The combined version passed the repository typecheck with 30 successful tasks.
