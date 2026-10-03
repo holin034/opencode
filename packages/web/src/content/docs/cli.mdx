@@ -465,7 +465,7 @@ opencode stats
 
 ### export
 
-Export session data as JSON.
+Export session data as JSON or Markdown.
 
 ```bash
 opencode export [sessionID]
@@ -473,11 +473,14 @@ opencode export [sessionID]
 
 If you don't provide a session ID, you'll be prompted to select from available sessions.
 
+Markdown exports are for reading and sharing. Only JSON exports can be loaded back with `opencode import`.
+
 #### Flags
 
-| Flag                                     | Description                           |
-| ---------------------------------------- | ------------------------------------- |
-| <nobr><code>{"--sanitize"}</code></nobr> | Redact sensitive transcript/file data |
+| Flag                                     | Description                                   |
+| ---------------------------------------- | --------------------------------------------- |
+| <nobr><code>{"--format"}</code></nobr>   | Output format: `json` (default) or `md`       |
+| <nobr><code>{"--sanitize"}</code></nobr> | Redact sensitive transcript/file data         |
 
 ---
 

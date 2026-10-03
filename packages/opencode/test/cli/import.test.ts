@@ -40,6 +40,12 @@ test("formats import file errors", () => {
       new FSUtil.FileSystemError({ method: "readJson", cause: new SyntaxError("Unexpected token") }),
     ),
   ).toBe("Invalid JSON in test.json: Unexpected token")
+  expect(
+    formatImportFileError(
+      "session.md",
+      new FSUtil.FileSystemError({ method: "readJson", cause: new SyntaxError("Unexpected token") }),
+    ),
+  ).toBe("Cannot import session.md: Markdown exports are read-only. Export with --format json instead.")
 })
 
 // parseShareUrl tests

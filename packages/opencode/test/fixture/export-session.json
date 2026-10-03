@@ -1,0 +1,203 @@
+{
+  "info": {
+    "id": "ses_demo",
+    "slug": "fix-login-timeout",
+    "projectID": "global",
+    "directory": "/home/demo/SECRET-acme-internal",
+    "title": "Fix login timeout in SECRET-acme auth service",
+    "version": "1.0.0",
+    "summary": {
+      "additions": 4,
+      "deletions": 1,
+      "files": 1,
+      "diffs": [
+        {
+          "file": "src/SECRET-auth.ts",
+          "patch": "@@ -1 +1 @@\n-const TIMEOUT = 5\n+const TIMEOUT = 30 // SECRET-patch",
+          "additions": 4,
+          "deletions": 1,
+          "status": "modified"
+        }
+      ]
+    },
+    "time": { "created": 1790000000000, "updated": 1790000300000 }
+  },
+  "messages": [
+    {
+      "info": {
+        "id": "msg_demo01",
+        "sessionID": "ses_demo",
+        "role": "user",
+        "time": { "created": 1790000000000 },
+        "agent": "build",
+        "model": { "providerID": "anthropic", "modelID": "claude-sonnet-5-5" },
+        "summary": {
+          "title": "SECRET-summary-title",
+          "body": "SECRET-summary-body",
+          "diffs": []
+        }
+      },
+      "parts": [
+        {
+          "id": "prt_demo0101",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "text",
+          "text": "Logins time out after 5 seconds. Our key is SECRET-api-key-123. Can you fix it?"
+        },
+        {
+          "id": "prt_demo0102",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "file",
+          "mime": "text/plain",
+          "filename": "SECRET-auth.ts",
+          "url": "file:///home/demo/SECRET-acme-internal/src/auth.ts",
+          "source": {
+            "type": "file",
+            "path": "src/SECRET-auth.ts",
+            "text": { "value": "@SECRET-auth.ts", "start": 0, "end": 15 }
+          }
+        },
+        {
+          "id": "prt_demo0103",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "agent",
+          "name": "explore",
+          "source": { "value": "@SECRET-agent-mention", "start": 0, "end": 21 }
+        },
+        {
+          "id": "prt_demo0104",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "subtask",
+          "prompt": "Find every caller of SECRET-login()",
+          "description": "Search SECRET-callers",
+          "agent": "explore",
+          "command": "SECRET-command"
+        }
+      ]
+    },
+    {
+      "info": {
+        "id": "msg_demo02",
+        "sessionID": "ses_demo",
+        "role": "assistant",
+        "parentID": "msg_demo01",
+        "time": { "created": 1790000010000, "completed": 1790000300000 },
+        "modelID": "claude-sonnet-5-5",
+        "providerID": "anthropic",
+        "mode": "build",
+        "agent": "build",
+        "path": { "cwd": "/home/demo/SECRET-acme-internal", "root": "/home/demo/SECRET-acme-internal" },
+        "cost": 0.0123,
+        "tokens": { "input": 1200, "output": 340, "reasoning": 80, "cache": { "read": 0, "write": 0 } },
+        "finish": "stop"
+      },
+      "parts": [
+        {
+          "id": "prt_demo0201",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "step-start",
+          "snapshot": "SECRET-snapshot-start"
+        },
+        {
+          "id": "prt_demo0202",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "reasoning",
+          "text": "The timeout constant in SECRET-auth.ts is too low.",
+          "time": { "start": 1790000010000, "end": 1790000012000 }
+        },
+        {
+          "id": "prt_demo0203",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "retry",
+          "attempt": 1,
+          "error": {
+            "name": "APIError",
+            "data": {
+              "message": "Overloaded",
+              "statusCode": 529,
+              "isRetryable": true,
+              "responseBody": "SECRET-response-body"
+            }
+          },
+          "time": { "created": 1790000013000 }
+        },
+        {
+          "id": "prt_demo0204",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "tool",
+          "callID": "call_read",
+          "tool": "read",
+          "state": {
+            "status": "completed",
+            "input": { "filePath": "/home/demo/SECRET-acme-internal/src/auth.ts" },
+            "output": "1: const TIMEOUT = 5 // SECRET-file-contents",
+            "title": "src/SECRET-auth.ts",
+            "metadata": { "lines": 1 },
+            "time": { "start": 1790000014000, "end": 1790000015000 }
+          }
+        },
+        {
+          "id": "prt_demo0205",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "tool",
+          "callID": "call_bash",
+          "tool": "bash",
+          "state": {
+            "status": "error",
+            "input": { "command": "npm test -- SECRET-test-filter" },
+            "error": "Command failed: SECRET-tool-error",
+            "time": { "start": 1790000016000, "end": 1790000017000 }
+          }
+        },
+        {
+          "id": "prt_demo0206",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "patch",
+          "hash": "SECRET-patch-hash",
+          "files": ["src/SECRET-auth.ts"]
+        },
+        {
+          "id": "prt_demo0207",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "snapshot",
+          "snapshot": "SECRET-snapshot"
+        },
+        {
+          "id": "prt_demo0208",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "text",
+          "text": "I raised `TIMEOUT` from 5 to 30 seconds in SECRET-auth.ts. The bash test run failed, so please re-run it locally."
+        },
+        {
+          "id": "prt_demo0209",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "compaction",
+          "auto": true
+        },
+        {
+          "id": "prt_demo0210",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "step-finish",
+          "reason": "stop",
+          "snapshot": "SECRET-snapshot-finish",
+          "cost": 0.0123,
+          "tokens": { "input": 1200, "output": 340, "reasoning": 80, "cache": { "read": 0, "write": 0 } }
+        }
+      ]
+    }
+  ]
+}

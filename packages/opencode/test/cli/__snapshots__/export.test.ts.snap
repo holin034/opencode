@@ -1,0 +1,600 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`export sanitize output is unchanged 1`] = `
+{
+  "info": {
+    "directory": "[redacted:session-directory:ses_demo]",
+    "id": "ses_demo",
+    "projectID": "global",
+    "revert": undefined,
+    "slug": "fix-login-timeout",
+    "summary": {
+      "additions": 4,
+      "deletions": 1,
+      "diffs": [
+        {
+          "additions": 4,
+          "deletions": 1,
+          "file": "[redacted:session-diff-file:0]",
+          "patch": "[redacted:session-diff-patch:0]",
+          "status": "modified",
+        },
+      ],
+      "files": 1,
+    },
+    "time": {
+      "created": 1790000000000,
+      "updated": 1790000300000,
+    },
+    "title": "[redacted:session-title:ses_demo]",
+    "version": "1.0.0",
+  },
+  "messages": [
+    {
+      "info": {
+        "agent": "build",
+        "id": "msg_demo01",
+        "model": {
+          "modelID": "claude-sonnet-5-5",
+          "providerID": "anthropic",
+        },
+        "role": "user",
+        "sessionID": "ses_demo",
+        "summary": {
+          "body": "[redacted:summary-body:msg_demo01]",
+          "diffs": [],
+          "title": "[redacted:summary-title:msg_demo01]",
+        },
+        "system": undefined,
+        "time": {
+          "created": 1790000000000,
+        },
+      },
+      "parts": [
+        {
+          "id": "prt_demo0101",
+          "messageID": "msg_demo01",
+          "metadata": undefined,
+          "sessionID": "ses_demo",
+          "text": "[redacted:text:prt_demo0101]",
+          "type": "text",
+        },
+        {
+          "filename": "[redacted:file-name:prt_demo0102]",
+          "id": "prt_demo0102",
+          "messageID": "msg_demo01",
+          "mime": "text/plain",
+          "sessionID": "ses_demo",
+          "source": {
+            "path": "[redacted:file-path:prt_demo0102]",
+            "text": {
+              "end": 15,
+              "start": 0,
+              "value": "[redacted:file-text:prt_demo0102]",
+            },
+            "type": "file",
+          },
+          "type": "file",
+          "url": "[redacted:file-url:prt_demo0102]",
+        },
+        {
+          "id": "prt_demo0103",
+          "messageID": "msg_demo01",
+          "name": "explore",
+          "sessionID": "ses_demo",
+          "source": {
+            "end": 21,
+            "start": 0,
+            "value": "[redacted:agent-source:prt_demo0103]",
+          },
+          "type": "agent",
+        },
+        {
+          "agent": "explore",
+          "command": "[redacted:subtask-command:prt_demo0104]",
+          "description": "[redacted:subtask-description:prt_demo0104]",
+          "id": "prt_demo0104",
+          "messageID": "msg_demo01",
+          "prompt": "[redacted:subtask-prompt:prt_demo0104]",
+          "sessionID": "ses_demo",
+          "type": "subtask",
+        },
+      ],
+    },
+    {
+      "info": {
+        "agent": "build",
+        "cost": 0.0123,
+        "finish": "stop",
+        "id": "msg_demo02",
+        "mode": "build",
+        "modelID": "claude-sonnet-5-5",
+        "parentID": "msg_demo01",
+        "path": {
+          "cwd": "[redacted:cwd:msg_demo02]",
+          "root": "[redacted:root:msg_demo02]",
+        },
+        "providerID": "anthropic",
+        "role": "assistant",
+        "sessionID": "ses_demo",
+        "time": {
+          "completed": 1790000300000,
+          "created": 1790000010000,
+        },
+        "tokens": {
+          "cache": {
+            "read": 0,
+            "write": 0,
+          },
+          "input": 1200,
+          "output": 340,
+          "reasoning": 80,
+        },
+      },
+      "parts": [
+        {
+          "id": "prt_demo0201",
+          "messageID": "msg_demo02",
+          "sessionID": "ses_demo",
+          "snapshot": "[redacted:snapshot:prt_demo0201]",
+          "type": "step-start",
+        },
+        {
+          "id": "prt_demo0202",
+          "messageID": "msg_demo02",
+          "metadata": undefined,
+          "sessionID": "ses_demo",
+          "text": "[redacted:reasoning:prt_demo0202]",
+          "time": {
+            "end": 1790000012000,
+            "start": 1790000010000,
+          },
+          "type": "reasoning",
+        },
+        {
+          "attempt": 1,
+          "error": {
+            "data": {
+              "isRetryable": true,
+              "message": "Overloaded",
+              "responseBody": "SECRET-response-body",
+              "statusCode": 529,
+            },
+            "name": "APIError",
+          },
+          "id": "prt_demo0203",
+          "messageID": "msg_demo02",
+          "sessionID": "ses_demo",
+          "time": {
+            "created": 1790000013000,
+          },
+          "type": "retry",
+        },
+        {
+          "callID": "call_read",
+          "id": "prt_demo0204",
+          "messageID": "msg_demo02",
+          "metadata": undefined,
+          "sessionID": "ses_demo",
+          "state": {
+            "attachments": undefined,
+            "input": {
+              "redacted": "tool-input:prt_demo0204",
+            },
+            "metadata": {
+              "redacted": "tool-state-metadata:prt_demo0204",
+            },
+            "output": "[redacted:tool-output:prt_demo0204]",
+            "status": "completed",
+            "time": {
+              "end": 1790000015000,
+              "start": 1790000014000,
+            },
+            "title": "[redacted:tool-title:prt_demo0204]",
+          },
+          "tool": "read",
+          "type": "tool",
+        },
+        {
+          "callID": "call_bash",
+          "id": "prt_demo0205",
+          "messageID": "msg_demo02",
+          "metadata": undefined,
+          "sessionID": "ses_demo",
+          "state": {
+            "error": "Command failed: SECRET-tool-error",
+            "input": {
+              "redacted": "tool-input:prt_demo0205",
+            },
+            "metadata": undefined,
+            "status": "error",
+            "time": {
+              "end": 1790000017000,
+              "start": 1790000016000,
+            },
+          },
+          "tool": "bash",
+          "type": "tool",
+        },
+        {
+          "files": [
+            "[redacted:patch-file:prt_demo0206-0]",
+          ],
+          "hash": "[redacted:patch:prt_demo0206]",
+          "id": "prt_demo0206",
+          "messageID": "msg_demo02",
+          "sessionID": "ses_demo",
+          "type": "patch",
+        },
+        {
+          "id": "prt_demo0207",
+          "messageID": "msg_demo02",
+          "sessionID": "ses_demo",
+          "snapshot": "[redacted:snapshot:prt_demo0207]",
+          "type": "snapshot",
+        },
+        {
+          "id": "prt_demo0208",
+          "messageID": "msg_demo02",
+          "metadata": undefined,
+          "sessionID": "ses_demo",
+          "text": "[redacted:text:prt_demo0208]",
+          "type": "text",
+        },
+        {
+          "auto": true,
+          "id": "prt_demo0209",
+          "messageID": "msg_demo02",
+          "sessionID": "ses_demo",
+          "type": "compaction",
+        },
+        {
+          "cost": 0.0123,
+          "id": "prt_demo0210",
+          "messageID": "msg_demo02",
+          "reason": "stop",
+          "sessionID": "ses_demo",
+          "snapshot": "[redacted:snapshot:prt_demo0210]",
+          "tokens": {
+            "cache": {
+              "read": 0,
+              "write": 0,
+            },
+            "input": 1200,
+            "output": 340,
+            "reasoning": 80,
+          },
+          "type": "step-finish",
+        },
+      ],
+    },
+  ],
+}
+`;
+
+exports[`export json output is unchanged 1`] = `
+"{
+  "info": {
+    "id": "ses_demo",
+    "slug": "fix-login-timeout",
+    "projectID": "global",
+    "directory": "/home/demo/SECRET-acme-internal",
+    "summary": {
+      "additions": 4,
+      "deletions": 1,
+      "files": 1,
+      "diffs": [
+        {
+          "file": "src/SECRET-auth.ts",
+          "patch": "@@ -1 +1 @@\\n-const TIMEOUT = 5\\n+const TIMEOUT = 30 // SECRET-patch",
+          "additions": 4,
+          "deletions": 1,
+          "status": "modified"
+        }
+      ]
+    },
+    "title": "Fix login timeout in SECRET-acme auth service",
+    "version": "1.0.0",
+    "time": {
+      "created": 1790000000000,
+      "updated": 1790000300000
+    }
+  },
+  "messages": [
+    {
+      "info": {
+        "id": "msg_demo01",
+        "sessionID": "ses_demo",
+        "role": "user",
+        "time": {
+          "created": 1790000000000
+        },
+        "summary": {
+          "title": "SECRET-summary-title",
+          "body": "SECRET-summary-body",
+          "diffs": []
+        },
+        "agent": "build",
+        "model": {
+          "providerID": "anthropic",
+          "modelID": "claude-sonnet-5-5"
+        }
+      },
+      "parts": [
+        {
+          "id": "prt_demo0101",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "text",
+          "text": "Logins time out after 5 seconds. Our key is SECRET-api-key-123. Can you fix it?"
+        },
+        {
+          "id": "prt_demo0102",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "file",
+          "mime": "text/plain",
+          "filename": "SECRET-auth.ts",
+          "url": "file:///home/demo/SECRET-acme-internal/src/auth.ts",
+          "source": {
+            "text": {
+              "value": "@SECRET-auth.ts",
+              "start": 0,
+              "end": 15
+            },
+            "type": "file",
+            "path": "src/SECRET-auth.ts"
+          }
+        },
+        {
+          "id": "prt_demo0103",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "agent",
+          "name": "explore",
+          "source": {
+            "value": "@SECRET-agent-mention",
+            "start": 0,
+            "end": 21
+          }
+        },
+        {
+          "id": "prt_demo0104",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo01",
+          "type": "subtask",
+          "prompt": "Find every caller of SECRET-login()",
+          "description": "Search SECRET-callers",
+          "agent": "explore",
+          "command": "SECRET-command"
+        }
+      ]
+    },
+    {
+      "info": {
+        "id": "msg_demo02",
+        "sessionID": "ses_demo",
+        "role": "assistant",
+        "time": {
+          "created": 1790000010000,
+          "completed": 1790000300000
+        },
+        "parentID": "msg_demo01",
+        "modelID": "claude-sonnet-5-5",
+        "providerID": "anthropic",
+        "mode": "build",
+        "agent": "build",
+        "path": {
+          "cwd": "/home/demo/SECRET-acme-internal",
+          "root": "/home/demo/SECRET-acme-internal"
+        },
+        "cost": 0.0123,
+        "tokens": {
+          "input": 1200,
+          "output": 340,
+          "reasoning": 80,
+          "cache": {
+            "read": 0,
+            "write": 0
+          }
+        },
+        "finish": "stop"
+      },
+      "parts": [
+        {
+          "id": "prt_demo0201",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "step-start",
+          "snapshot": "SECRET-snapshot-start"
+        },
+        {
+          "id": "prt_demo0202",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "reasoning",
+          "text": "The timeout constant in SECRET-auth.ts is too low.",
+          "time": {
+            "start": 1790000010000,
+            "end": 1790000012000
+          }
+        },
+        {
+          "id": "prt_demo0203",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "retry",
+          "attempt": 1,
+          "error": {
+            "name": "APIError",
+            "data": {
+              "message": "Overloaded",
+              "statusCode": 529,
+              "isRetryable": true,
+              "responseBody": "SECRET-response-body"
+            }
+          },
+          "time": {
+            "created": 1790000013000
+          }
+        },
+        {
+          "id": "prt_demo0204",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "tool",
+          "callID": "call_read",
+          "tool": "read",
+          "state": {
+            "status": "completed",
+            "input": {
+              "filePath": "/home/demo/SECRET-acme-internal/src/auth.ts"
+            },
+            "output": "1: const TIMEOUT = 5 // SECRET-file-contents",
+            "title": "src/SECRET-auth.ts",
+            "metadata": {
+              "lines": 1
+            },
+            "time": {
+              "start": 1790000014000,
+              "end": 1790000015000
+            }
+          }
+        },
+        {
+          "id": "prt_demo0205",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "tool",
+          "callID": "call_bash",
+          "tool": "bash",
+          "state": {
+            "status": "error",
+            "input": {
+              "command": "npm test -- SECRET-test-filter"
+            },
+            "error": "Command failed: SECRET-tool-error",
+            "time": {
+              "start": 1790000016000,
+              "end": 1790000017000
+            }
+          }
+        },
+        {
+          "id": "prt_demo0206",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "patch",
+          "hash": "SECRET-patch-hash",
+          "files": [
+            "src/SECRET-auth.ts"
+          ]
+        },
+        {
+          "id": "prt_demo0207",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "snapshot",
+          "snapshot": "SECRET-snapshot"
+        },
+        {
+          "id": "prt_demo0208",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "text",
+          "text": "I raised \`TIMEOUT\` from 5 to 30 seconds in SECRET-auth.ts. The bash test run failed, so please re-run it locally."
+        },
+        {
+          "id": "prt_demo0209",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "compaction",
+          "auto": true
+        },
+        {
+          "id": "prt_demo0210",
+          "sessionID": "ses_demo",
+          "messageID": "msg_demo02",
+          "type": "step-finish",
+          "reason": "stop",
+          "snapshot": "SECRET-snapshot-finish",
+          "cost": 0.0123,
+          "tokens": {
+            "input": 1200,
+            "output": 340,
+            "reasoning": 80,
+            "cache": {
+              "read": 0,
+              "write": 0
+            }
+          }
+        }
+      ]
+    }
+  ]
+}"
+`;
+
+exports[`export markdown output is unchanged 1`] = `
+"# Fix login timeout in SECRET-acme auth service
+
+- **Session:** ses_demo
+- **Created:** 2026-09-21T14:13:20.000Z
+- **Updated:** 2026-09-21T14:18:20.000Z
+- **Directory:** /home/demo/SECRET-acme-internal
+
+---
+
+## User
+
+Logins time out after 5 seconds. Our key is SECRET-api-key-123. Can you fix it?
+
+**File:** \`SECRET-auth.ts\` (text/plain)
+
+**Agent:** @explore
+
+**Subtask** (explore): Search SECRET-callers
+
+> Find every caller of SECRET-login()
+
+---
+
+## Assistant _(build · anthropic/claude-sonnet-5-5)_
+
+> _Thinking:_ The timeout constant in SECRET-auth.ts is too low.
+
+_Retry 1: Overloaded_
+
+**Tool: read** (completed): src/SECRET-auth.ts
+
+\`\`\`json
+{
+  "filePath": "/home/demo/SECRET-acme-internal/src/auth.ts"
+}
+\`\`\`
+
+\`\`\`
+1: const TIMEOUT = 5 // SECRET-file-contents
+\`\`\`
+
+**Tool: bash** (error)
+
+\`\`\`json
+{
+  "command": "npm test -- SECRET-test-filter"
+}
+\`\`\`
+
+**Error:**
+
+\`\`\`
+Command failed: SECRET-tool-error
+\`\`\`
+
+**Changed files:** \`src/SECRET-auth.ts\`
+
+I raised \`TIMEOUT\` from 5 to 30 seconds in SECRET-auth.ts. The bash test run failed, so please re-run it locally.
+
+_Context compacted automatically._
+"
+`;
