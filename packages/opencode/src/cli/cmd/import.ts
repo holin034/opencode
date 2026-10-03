@@ -45,6 +45,8 @@ export function formatImportFileError(file: string, error: FSUtil.Error) {
     return `Failed to read file: ${error.message}`
   }
 
+  // Markdown exports are for reading only and cannot be turned back into a session.
+  if (file.endsWith(".md")) return `Cannot import ${file}: Markdown exports are read-only. Export with --format json instead.`
   const detail = error.cause instanceof Error ? error.cause.message : error.message
   return `Invalid JSON in ${file}: ${detail}`
 }
