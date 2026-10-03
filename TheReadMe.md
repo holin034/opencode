@@ -1,7 +1,7 @@
-**Change:** MCP calls show `server > tool`; custom-file calls show
+**Change:** MCP calls show `server > tool`, custom-file calls show
 `namespace > export`, followed by bounded summaries of notable
 arguments. Renderer recognition and generic presentation are shared
-between the full TUI and `--mini`; each interface retains its drawing.
+between the full TUI and `--mini`. Each interface retains its drawing.
 
 **Checks:** Run each command from the repository root:
 
@@ -20,7 +20,7 @@ and unchanged model-facing results.
 and is removed before metadata reaches the provider. No major scope changes.
 
 **Limits:** Historical calls without origin metadata display their raw
-name. Argument summaries use a fixed allowlist; unapproved fields are
+name. Argument summaries use a fixed allowlist. Unapproved fields are
 omitted. Plugin-hook namespace declarations and nested code-mode
 presentation are outside this change.
 
