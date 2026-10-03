@@ -1,3 +1,4 @@
+**Issue 12**:
 **Change:** MCP calls show `server > tool`, custom-file calls show
 `namespace > export`, followed by bounded summaries of notable
 arguments. Renderer recognition and generic presentation are shared
@@ -49,3 +50,22 @@ combined version.
 - `opencode/src/cli/cmd/run/permission.shared.ts` + its test: copy changed from "until OpenCode is restarted" to "always ... in this project".
 - `tui/src/routes/session/permission.tsx`: same copy change in the TUI prompt (2 strings, no test exists for them). Prettier-clean; `packages/tui` typecheck was not re-run after the Prettier rewrite.
 - `opencode/test/session/tools.test.ts`: fake `Permission` service gained the two new methods (needed to typecheck).
+
+**Issue 1**:
+
+**Change:** `Ripgrep.grep` and `Ripgrep.glob` now return a shared `SearchResult<T>` with `{ items, truncated }` instead of only an array. The grep tool, glob tool, and `/find` route use the truncation value computed by ripgrep instead of guessing from `result.length == limit`. Each caller still owns its own limit, while ripgrep owns the decision of whether the result was actually truncated.
+
+**Checks:** Run each command from the repository root:  
+`(cd packages/core && bun test test/ripgrep.test.ts test/filesystem/search.test.ts)`  
+`(cd packages/opencode && bun test test/tool/grep.test.ts test/tool/glob.test.ts)`  
+`bun run typecheck`  
+
+The focused checks cover 0 matches, exactly the limit, and one over the limit. They also verify that grep and glob agree at the same limit and that `/find` keeps its existing response body while exposing truncation separately.
+
+**Results:** The full repository typecheck passed with all 30 tasks successful. The focused truncation checks confirm that 0 matches reports `truncated = false`, exactly the limit reports `truncated = false`, and one over the limit returns only the limit and reports `truncated = true`.
+
+**RFC differences:** The final implementation introduced a shared `SearchResult<T>` type for `{ items, truncated }`, following reviewer feedback. The return-type change also required updating additional callers that still treated the result as an array, including filesystem search, core grep/glob tools, the ripgrep debug command, and existing tests. The main design did not change where the callers own their limits and ripgrep owns truncation detection.
+
+**Limits:** The change only affects grep, glob, and the `/find` text-search path. `/find/file` is unchanged. Existing callers that do not need truncation information continue to receive arrays through their wrappers, and the `/find` response body stays backward compatible.
+
+**Team integration:** Issue #1 was merged into the team’s `main` branch. The combined version passed the repository typecheck with 30 successful tasks. After the remaining teammates’ changes are fully integrated, rerun the focused search tests and typecheck on the final combined commit.
