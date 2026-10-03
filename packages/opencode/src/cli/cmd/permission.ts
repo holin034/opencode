@@ -1,7 +1,6 @@
 import type { Argv } from "yargs"
 import { Effect } from "effect"
 import { EOL } from "os"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
 import { Permission } from "@/permission"
 import { cmd } from "./cmd"
 import { effectCmd, fail } from "../effect-cmd"
@@ -37,7 +36,7 @@ export const PermissionListCommand = effectCmd({
 
 export const PermissionRemoveCommand = effectCmd({
   command: "remove <id>",
-  aliases: ["rm"],
+  aliases: ["delete", "rm"],
   describe: 'remove a stored "always allow" approval so it is asked again',
   builder: (yargs) =>
     yargs.positional("id", {
@@ -47,7 +46,7 @@ export const PermissionRemoveCommand = effectCmd({
     }),
   handler: Effect.fn("Cli.permission.remove")(function* (args) {
     const svc = yield* Permission.Service
-    const id = PermissionSaved.ID.make(args.id)
+    const id = Permission.ApprovalID.make(args.id)
     const items = yield* svc.approvals()
     if (!items.some((item) => item.id === id)) return yield* fail(`Approval not found in this project: ${args.id}`)
     yield* svc.removeApprovals(id)
@@ -55,7 +54,7 @@ export const PermissionRemoveCommand = effectCmd({
   }),
 })
 
-function formatTable(items: ReadonlyArray<PermissionSaved.Info>): string {
+function formatTable(items: ReadonlyArray<Permission.Approval>): string {
   const idWidth = Math.max(2, ...items.map((item) => item.id.length))
   const actionWidth = Math.max(10, ...items.map((item) => item.action.length))
   const header = `${"ID".padEnd(idWidth)}  ${"Permission".padEnd(actionWidth)}  Pattern`

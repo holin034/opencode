@@ -320,6 +320,13 @@ it.live("approvals only lists the current project and remove only affects the ch
         )
         expect((yield* inProject(a, approvals)).map((item) => item.resource)).toEqual(["pwd"])
         expect((yield* inProject(b, approvals)).map((item) => item.resource)).toEqual(["cat"])
+
+        // removing another project's approval from project a is a no-op
+        yield* inProject(
+          a,
+          Permission.Service.use((svc) => svc.removeApprovals(forB[0].id)),
+        )
+        expect((yield* inProject(b, approvals)).map((item) => item.resource)).toEqual(["cat"])
       }),
     )
   }),

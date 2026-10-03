@@ -1,5 +1,4 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
 import { Permission } from "@/permission"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
@@ -42,7 +41,7 @@ export const permissionHandlers = HttpApiBuilder.group(InstanceHttpApi, "permiss
     })
 
     const removeApproval = Effect.fn("PermissionHttpApi.removeApproval")(function* (ctx: {
-      params: { id: PermissionSaved.ID }
+      params: { id: Permission.ApprovalID }
     }) {
       yield* svc.removeApprovals(ctx.params.id)
       return true

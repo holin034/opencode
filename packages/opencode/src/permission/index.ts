@@ -11,14 +11,20 @@ import type { ProjectID } from "@opencode-ai/schema/project-id"
 
 export const Event = PermissionV1.Event
 
+/** A stored "always" approval. Re-exported so callers depend on Permission only, never on PermissionSaved. */
+export const Approval = PermissionSaved.Info
+export type Approval = PermissionSaved.Info
+export const ApprovalID = PermissionSaved.ID
+export type ApprovalID = PermissionSaved.ID
+
 export interface Interface {
   readonly ask: (input: PermissionV1.AskInput) => Effect.Effect<void, PermissionV1.Error>
   readonly reply: (input: PermissionV1.ReplyInput) => Effect.Effect<void, PermissionV1.NotFoundError>
   readonly list: () => Effect.Effect<ReadonlyArray<PermissionV1.Request>>
   /** Stored "always" approvals for the current project. */
-  readonly approvals: () => Effect.Effect<ReadonlyArray<PermissionSaved.Info>>
-  /** Remove one stored approval by id. */
-  readonly removeApprovals: (id: PermissionSaved.ID) => Effect.Effect<void>
+  readonly approvals: () => Effect.Effect<ReadonlyArray<Approval>>
+  /** Remove one stored approval by id. Only approvals of the current project can be removed. */
+  readonly removeApprovals: (id: ApprovalID) => Effect.Effect<void>
 }
 
 interface PendingEntry {
@@ -193,7 +199,10 @@ const layer = Layer.effect(
       return yield* saved.list({ projectID })
     })
 
-    const removeApprovals = Effect.fn("Permission.removeApprovals")(function* (id: PermissionSaved.ID) {
+    const removeApprovals = Effect.fn("Permission.removeApprovals")(function* (id: ApprovalID) {
+      const { projectID } = yield* InstanceState.get(state)
+      const rows = yield* saved.list({ projectID })
+      if (!rows.some((row) => row.id === id)) return
       yield* saved.remove(id)
     })
 

@@ -1,5 +1,4 @@
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
-import { PermissionSaved } from "@opencode-ai/core/permission/saved"
 import { Permission } from "@/permission"
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"
@@ -31,7 +30,7 @@ export const PermissionApi = HttpApi.make("permission")
         ),
         HttpApiEndpoint.get("approvals", `${root}/approval`, {
           query: WorkspaceRoutingQuery,
-          success: described(Schema.Array(PermissionSaved.Info), "List of stored approvals for the project"),
+          success: described(Schema.Array(Permission.Approval), "List of stored approvals for the project"),
         }).annotateMerge(
           OpenApi.annotations({
             identifier: "permission.approvals",
@@ -40,7 +39,7 @@ export const PermissionApi = HttpApi.make("permission")
           }),
         ),
         HttpApiEndpoint.delete("removeApproval", `${root}/approval/:id`, {
-          params: { id: PermissionSaved.ID },
+          params: { id: Permission.ApprovalID },
           query: WorkspaceRoutingQuery,
           success: described(Schema.Boolean, "Stored approval removed"),
         }).annotateMerge(
