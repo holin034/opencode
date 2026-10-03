@@ -27,3 +27,25 @@ presentation are outside this change.
 **Team integration:** Issue 12 was combined with issue 1’s search
 truncation change without conflicts. The checks above passed on that
 combined version.
+
+**Issue 4**:
+
+# Change notes: persist "always allow" (Issue #4)
+
+## Behavior
+- Replying `always` now writes to the existing `permission` table via `PermissionSaved.add`, scoped to the project (`ctx.project.id`). It no longer lives in per-instance memory.
+- `Permission.ask` is two-stage (per design_graph):
+  1. Evaluate the caller/config ruleset. `deny` is final (`DeniedError`); `allow` proceeds.
+  2. Only if undecided, evaluate stored approvals for the project. A match proceeds without prompt; otherwise the request stays pending.
+- Stored approvals are never merged into the config ruleset, so a config deny always wins.
+- `once` and `reject` store nothing. A stored rule for an unknown permission is just an unmatched rule and never blocks startup.
+- Design decisions: scope = project; precedence = config deny > config allow > stored allow > prompt; shape changes = rows are plain `(action, resource)` strings, so no versioning was added.
+
+## Files changed (packages/)
+- `opencode/src/permission/index.ts`: depends on `PermissionSaved.node`; `State.approved` removed; two-stage `ask`; `reply` persists `always`; new `approvals()` / `removeApprovals(id)`. Re-exports `Permission.Approval` / `Permission.ApprovalID` (aliases of `PermissionSaved.Info` / `PermissionSaved.ID`) so callers depend on `Permission` only. `removeApprovals(id)` only removes an approval belonging to the current project; another project's id is a no-op.
+- `schema/src/v1/permission.ts`: removed unused `Approval` export (and `Project` import).
+- `opencode/src/server/routes/instance/httpapi/groups/permission.ts`, `handlers/permission.ts`: `GET /permission/approval`, `DELETE /permission/approval/:id`. They use `Permission.Approval` / `Permission.ApprovalID`, with no direct `PermissionSaved` import.
+- `opencode/src/cli/cmd/permission.ts` (new) + `opencode/src/index.ts`: `opencode permission list [--format json]` and `opencode permission remove <id>` (aliases `delete`, `rm`; project-scoped).
+- `opencode/src/cli/cmd/run/permission.shared.ts` + its test: copy changed from "until OpenCode is restarted" to "always ... in this project".
+- `tui/src/routes/session/permission.tsx`: same copy change in the TUI prompt (2 strings, no test exists for them). Prettier-clean; `packages/tui` typecheck was not re-run after the Prettier rewrite.
+- `opencode/test/session/tools.test.ts`: fake `Permission` service gained the two new methods (needed to typecheck).
