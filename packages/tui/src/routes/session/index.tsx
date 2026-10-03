@@ -153,7 +153,7 @@ const sessionGlobalBindingCommands = [
 
 const sessionGlobalUnfocusedBindingCommands = ["session.first", "session.last"] as const
 
-const context = createContext<{
+export const SessionToolContext = createContext<{
   width: number
   sessionID: string
   conceal: () => boolean
@@ -169,7 +169,7 @@ const context = createContext<{
 }>()
 
 function use() {
-  const ctx = useContext(context)
+  const ctx = useContext(SessionToolContext)
   if (!ctx) throw new Error("useContext must be used within a Session component")
   return ctx
 }
@@ -1156,7 +1156,7 @@ export function Session() {
 
   return (
     <LocationProvider location={location()}>
-      <context.Provider
+      <SessionToolContext.Provider
         value={{
           get width() {
             return contentWidth()
@@ -1356,7 +1356,7 @@ export function Session() {
             </Switch>
           </Show>
         </box>
-      </context.Provider>
+      </SessionToolContext.Provider>
     </LocationProvider>
   )
 }
@@ -1577,7 +1577,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
 
 const PART_MAPPING = {
   text: TextPart,
-  tool: ToolPart,
+  tool: SessionToolPart,
   reasoning: ReasoningPart,
 }
 
@@ -1706,7 +1706,7 @@ function TextPart(props: { last: boolean; part: TextPart; message: AssistantMess
 
 // Pending messages moved to individual tool pending functions
 
-function ToolPart(props: { last: boolean; part: ToolPart; message: AssistantMessage }) {
+export function SessionToolPart(props: { last: boolean; part: ToolPart; message: AssistantMessage }) {
   const ctx = use()
   const display = createMemo(() => toolDisplay(props.part.tool))
 
