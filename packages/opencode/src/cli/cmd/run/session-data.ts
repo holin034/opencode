@@ -944,7 +944,7 @@ export function reduceSessionData(input: SessionDataInput): SessionDataOutput {
 
       if (part.state.status === "completed") {
         const seen = data.tools.has(part.id)
-        const mode = toolView(part.tool)
+        const mode = toolView(part.tool, part.metadata?.toolPresentation)
         data.tools.delete(part.id)
         if (data.ids.has(part.id)) {
           return out(data, commits, view)

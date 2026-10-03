@@ -1169,3 +1169,86 @@ itFragmentFailure.live("session.processor effect tests retain partial legacy par
     { config: cfg },
   ),
 )
+
+// A deterministic event stream checks persistence before and after execution,
+// without connecting to a provider or an MCP server.
+for (const outcome of [
+  "success",
+  "custom success",
+  "validation failure",
+  "permission rejection",
+  "execution failure",
+  "interruption",
+] as const) {
+  const success = outcome === "success" || outcome === "custom success"
+  const origin =
+    outcome === "custom success"
+      ? ({ kind: "custom", namespace: "db_tools", tool: "default" } as const)
+      : ({ kind: "mcp", server: "my_server.v2", tool: "search_items" } as const)
+  const originLLM = Layer.succeed(
+    LLM.Service,
+    LLM.Service.of({
+      stream: () =>
+        Stream.make(
+          LLMEvent.toolInputStart({ id: "origin-call", name: "external_search" }),
+          LLMEvent.toolInputEnd({ id: "origin-call", name: "external_search" }),
+          LLMEvent.toolCall({
+            id: "origin-call",
+            name: "external_search",
+            input: { query: "needle" },
+            providerMetadata: { test: { retained: true } },
+          }),
+          ...(success
+            ? [
+                LLMEvent.toolResult({
+                  id: "origin-call",
+                  name: "external_search",
+                  result: { type: "json", value: { output: "original result", title: "", metadata: { count: 1 } } },
+                }),
+              ]
+            : outcome === "interruption"
+              ? []
+              : [LLMEvent.toolError({ id: "origin-call", name: "external_search", message: outcome })]),
+          LLMEvent.finish({ reason: "stop" }),
+        ).pipe(Stream.tap((event) => (event.type === "tool-input-end" ? checkPending() : Effect.void))),
+    }),
+  )
+  let checkPending: () => Effect.Effect<void, unknown> = () => Effect.void
+  const originEnv = LayerNode.compile(root, [...replacements, [LLM.node, originLLM]])
+  testEffect(originEnv).live(`tool origin persists through ${outcome}`, () =>
+    provideTmpdirInstance(
+      (dir) =>
+        Effect.gen(function* () {
+          const { processors, session, provider } = yield* boot()
+          const chat = yield* session.create({})
+          const parent = yield* user(chat.id, "origin test")
+          const msg = yield* assistant(chat.id, parent.id, path.resolve(dir))
+          const mdl = yield* provider.getModel(ref.providerID, ref.modelID)
+          const handle = yield* processors.create({ assistantMessage: msg, sessionID: chat.id, model: mdl })
+          checkPending = () =>
+            Effect.gen(function* () {
+              const stored = yield* session.messages({ sessionID: chat.id })
+              const pending = stored.flatMap((message) => message.parts).find((part) => part.type === "tool")
+              expect(pending?.type).toBe("tool")
+              if (pending?.type === "tool") {
+                expect(pending.state.status).toBe("pending")
+                expect(pending.metadata?.toolPresentation).toEqual(origin)
+              }
+            })
+          yield* handle.process(
+            { user: parent, sessionID: chat.id, model: mdl, agent: agent(), system: [], messages: [], tools: {} },
+            { external_search: origin },
+          )
+          const stored = yield* MessageV2.get({ sessionID: chat.id, messageID: msg.id })
+          const call = stored.parts.find((part): part is SessionV1.ToolPart => part.type === "tool")
+          expect(call?.metadata?.toolPresentation).toEqual(origin)
+          expect(call?.metadata?.test).toEqual({ retained: true })
+          expect(call?.state.status).toBe(success ? "completed" : "error")
+          if (call?.state.status === "completed") expect(call.state.output).toBe("original result")
+          // Result metadata must remain execution-owned, not contain presentation.
+          if (call && "metadata" in call.state) expect(call.state.metadata?.toolPresentation).toBeUndefined()
+        }),
+      { config: cfg },
+    ),
+  )
+}

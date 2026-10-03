@@ -1,3 +1,4 @@
+import type { ToolOrigin } from "@opencode-ai/core/util/tool-presentation"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Image } from "@/image/image"
@@ -44,7 +45,7 @@ export interface Handle {
       attachments?: SessionV1.FilePart[]
     },
   ) => Effect.Effect<void>
-  readonly process: (streamInput: LLM.StreamInput) => Effect.Effect<Result>
+  readonly process: (streamInput: LLM.StreamInput, origins?: Record<string, ToolOrigin>) => Effect.Effect<Result>
 }
 
 type Input = {
@@ -65,6 +66,7 @@ type ToolCall = {
 }
 
 interface ProcessorContext extends Input {
+  origins: Record<string, ToolOrigin>
   toolcalls: Record<string, ToolCall>
   shouldBreak: boolean
   snapshot: string | undefined
@@ -105,6 +107,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID,
         model: input.model,
         toolcalls: {},
+        origins: {},
         shouldBreak: false,
         snapshot: initialSnapshot,
         blocked: false,
@@ -233,6 +236,7 @@ const layer = Layer.effect(
           }
           return { call: ctx.toolcalls[input.id], part }
         }
+        const origin = Object.hasOwn(ctx.origins, input.name) ? ctx.origins[input.name] : undefined
         const part = yield* session.updatePart({
           id: PartID.ascending(),
           messageID: ctx.assistantMessage.id,
@@ -241,7 +245,13 @@ const layer = Layer.effect(
           tool: input.name,
           callID: input.id,
           state: { status: "pending", input: {}, raw: "" },
-          metadata: input.providerExecuted ? { providerExecuted: true } : undefined,
+          metadata:
+            input.providerExecuted || origin
+              ? {
+                  ...(input.providerExecuted ? { providerExecuted: true } : {}),
+                  ...(origin ? { toolPresentation: origin } : {}),
+                }
+              : undefined,
         } satisfies SessionV1.ToolPart)
         ctx.toolcalls[input.id] = {
           done: yield* Deferred.make<void>(),
@@ -345,9 +355,15 @@ const layer = Layer.effect(
                       input,
                       time: { start: Date.now() },
                     },
-              metadata: match.metadata?.providerExecuted
-                ? { ...value.providerMetadata, providerExecuted: true }
-                : value.providerMetadata,
+              metadata: match.metadata?.toolPresentation
+                ? {
+                    ...value.providerMetadata,
+                    ...(match.metadata?.providerExecuted ? { providerExecuted: true } : {}),
+                    toolPresentation: match.metadata.toolPresentation,
+                  }
+                : match.metadata?.providerExecuted
+                  ? { ...value.providerMetadata, providerExecuted: true }
+                  : value.providerMetadata,
             }))
 
             const parts = yield* MessageV2.parts(ctx.assistantMessage.id).pipe(
@@ -638,7 +654,11 @@ const layer = Layer.effect(
         yield* status.set(ctx.sessionID, { type: "idle" })
       })
 
-      const process = Effect.fn("SessionProcessor.process")(function* (streamInput: LLM.StreamInput) {
+      const process = Effect.fn("SessionProcessor.process")(function* (
+        streamInput: LLM.StreamInput,
+        origins: Record<string, ToolOrigin> = {},
+      ) {
+        ctx.origins = origins
         yield* Effect.logInfo("process", {
           "session.id": input.sessionID,
           messageID: input.assistantMessage.id,

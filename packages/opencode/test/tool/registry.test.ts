@@ -315,6 +315,7 @@ describe("tool.registry", () => {
             "  args: { query: tool.schema.string().describe('SQL query to execute') },",
             "  execute: async ({ query }) => query,",
             "})",
+            "export const search = tool({ description: 'search', args: {}, execute: async () => 'done' })",
             "",
           ].join("\n"),
         ),
@@ -323,6 +324,7 @@ describe("tool.registry", () => {
       const registry = yield* ToolRegistry.Service
       const loaded = (yield* registry.all()).find((tool) => tool.id === "sql")
       if (!loaded) throw new Error("custom sql tool was not loaded")
+      expect(loaded.origin).toEqual({ kind: "custom", namespace: "sql", tool: "default" })
       expect(loaded?.jsonSchema).toMatchObject({
         type: "object",
         properties: {
@@ -339,8 +341,14 @@ describe("tool.registry", () => {
         modelID: ModelV2.ID.make("test"),
         agent: yield* agents.defaultInfo(),
       })
+      expect(promptTools.find((tool) => tool.id === "sql_search")?.origin).toEqual({
+        kind: "custom",
+        namespace: "sql",
+        tool: "search",
+      })
       const promptTool = promptTools.find((tool) => tool.id === "sql")
       if (!promptTool) throw new Error("custom sql tool was not returned for prompts")
+      expect(promptTool.origin).toEqual(loaded.origin)
       expect(ToolJsonSchema.fromTool(promptTool)).toMatchObject({
         properties: {
           query: { type: "string", description: "SQL query to execute" },

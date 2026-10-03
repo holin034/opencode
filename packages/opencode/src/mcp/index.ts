@@ -155,6 +155,7 @@ export interface ServerInstructions {
 
 /** An MCP tool in its native shape; consumers adapt it to their own tool format. */
 export interface McpTool {
+  readonly server?: string
   /** Shared cached definition; consumers must copy rather than mutate it. */
   readonly def: MCPToolDef
   readonly client: MCPClient
@@ -681,7 +682,7 @@ const layer = Layer.effect(
         }
         const timeout = requestTimeout(s, clientName, mcpConfig, defaultTimeout)
         for (const def of listed) {
-          result[McpCatalog.toolName(clientName, def.name)] = { def, client, timeout }
+          result[McpCatalog.toolName(clientName, def.name)] = { def, client, timeout, server: clientName }
         }
       }
       return result

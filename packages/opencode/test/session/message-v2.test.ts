@@ -1727,3 +1727,46 @@ describe("session.message-v2.latest", () => {
     expect(state.tasks[0]).toMatchObject({ type: "subtask", prompt: "inspect" })
   })
 })
+
+test("tool presentation never changes model-facing results or provider metadata", async () => {
+  for (const status of ["completed", "error", "running", "pending"] as const) {
+    const tool: SessionV1.ToolPart = {
+      ...basePart("assistant", "tool"),
+      type: "tool",
+      callID: "call",
+      tool: "external_search",
+      state:
+        status === "completed"
+          ? {
+              status,
+              input: { query: "needle" },
+              output: "original result\n",
+              title: "",
+              metadata: { retained: true },
+              time: { start: 0, end: 1 },
+              attachments: [
+                {
+                  ...basePart("assistant", "attachment"),
+                  type: "file",
+                  mime: "application/pdf",
+                  url: "data:application/pdf;base64,dGVzdA==",
+                },
+              ],
+            }
+          : status === "error"
+            ? { status, input: { query: "needle" }, error: "original failure", time: { start: 0, end: 1 } }
+            : status === "pending"
+              ? { status, input: {}, raw: "" }
+              : { status, input: { query: "needle" }, time: { start: 0 } },
+      metadata: { openai: { retained: "provider data" } },
+    }
+    const input: SessionV1.WithParts[] = [
+      { info: userInfo("user"), parts: [{ ...basePart("user", "text"), type: "text", text: "search" }] },
+      { info: assistantInfo("assistant", "user"), parts: [tool] },
+    ]
+    const baseline = await MessageV2.toModelMessages(input, model)
+    tool.metadata = { ...tool.metadata, toolPresentation: { kind: "mcp", server: "my_server", tool: "search" } }
+    expect(await MessageV2.toModelMessages(input, model)).toEqual(baseline)
+    expect(JSON.stringify(await MessageV2.toModelMessages(input, model))).not.toContain("toolPresentation")
+  }
+})
