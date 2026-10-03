@@ -8,6 +8,7 @@ import { AbsolutePath, RelativePath } from "@opencode-ai/core/schema"
 import { Effect, Layer, Option } from "effect"
 import ignore from "ignore"
 import path from "path"
+import { HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 
@@ -25,9 +26,10 @@ export const fileHandlers = HttpApiBuilder.group(InstanceHttpApi, "file", (handl
     })
 
     const findText = Effect.fn("FileHttpApi.findText")(function* (ctx: { query: { pattern: string } }) {
-      return (yield* ripgrep
+      const result = yield* ripgrep
         .grep({ cwd: (yield* InstanceState.context).directory, pattern: ctx.query.pattern, limit: 10 })
-        .pipe(Effect.orDie)).map((match) => ({
+        .pipe(Effect.orDie)
+      const items = result.items.map((match) => ({
         path: { text: match.entry.path },
         lines: { text: match.text },
         line_number: match.line,
@@ -38,6 +40,9 @@ export const fileHandlers = HttpApiBuilder.group(InstanceHttpApi, "file", (handl
           end: submatch.end,
         })),
       }))
+      return HttpServerResponse.jsonUnsafe(items, {
+        headers: { "opencode-truncated": String(result.truncated) },
+      })
     })
 
     const findFile = Effect.fn("FileHttpApi.findFile")(function* (ctx: {

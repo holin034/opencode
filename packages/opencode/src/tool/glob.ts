@@ -47,8 +47,9 @@ export const GlobTool = Tool.define(
           })
 
           const limit = 100
-          const files = yield* ripgrep.glob({ cwd: search, pattern: params.pattern, limit })
-          const truncated = files.length === limit
+          const result = yield* ripgrep.glob({ cwd: search, pattern: params.pattern, limit })
+          const files = result.items
+          const truncated = result.truncated
 
           const output = []
           if (files.length === 0) output.push("No files found")
