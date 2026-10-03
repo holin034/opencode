@@ -6,13 +6,25 @@ import { Deferred, Effect, Layer, Context } from "effect"
 import os from "os"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { EventV2Bridge } from "@/event-v2-bridge"
+import { PermissionSaved } from "@opencode-ai/core/permission/saved"
+import type { ProjectID } from "@opencode-ai/schema/project-id"
 
 export const Event = PermissionV1.Event
+
+/** A stored "always" approval. Re-exported so callers depend on Permission only, never on PermissionSaved. */
+export const Approval = PermissionSaved.Info
+export type Approval = PermissionSaved.Info
+export const ApprovalID = PermissionSaved.ID
+export type ApprovalID = PermissionSaved.ID
 
 export interface Interface {
   readonly ask: (input: PermissionV1.AskInput) => Effect.Effect<void, PermissionV1.Error>
   readonly reply: (input: PermissionV1.ReplyInput) => Effect.Effect<void, PermissionV1.NotFoundError>
   readonly list: () => Effect.Effect<ReadonlyArray<PermissionV1.Request>>
+  /** Stored "always" approvals for the current project. */
+  readonly approvals: () => Effect.Effect<ReadonlyArray<Approval>>
+  /** Remove one stored approval by id. Only approvals of the current project can be removed. */
+  readonly removeApprovals: (id: ApprovalID) => Effect.Effect<void>
 }
 
 interface PendingEntry {
@@ -21,8 +33,8 @@ interface PendingEntry {
 }
 
 interface State {
+  projectID: ProjectID
   pending: Map<PermissionV1.ID, PendingEntry>
-  approved: PermissionV1.Rule[]
 }
 
 export function evaluate(permission: string, pattern: string, ...rulesets: PermissionV1.Ruleset[]): PermissionV1.Rule {
@@ -43,12 +55,12 @@ const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
     const events = yield* EventV2Bridge.Service
+    const saved = yield* PermissionSaved.Service
     const state = yield* InstanceState.make<State>(
       Effect.fn("Permission.state")(function* (ctx) {
-        void ctx
-        const state = {
+        const state: State = {
+          projectID: ctx.project.id,
           pending: new Map<PermissionV1.ID, PendingEntry>(),
-          approved: [],
         }
 
         yield* Effect.addFinalizer(() =>
@@ -64,13 +76,19 @@ const layer = Layer.effect(
       }),
     )
 
-    const ask = Effect.fn("Permission.ask")(function* (input: PermissionV1.AskInput) {
-      const { approved, pending } = yield* InstanceState.get(state)
-      const { ruleset, ...request } = input
-      let needsAsk = false
+    const storedRules = Effect.fn("Permission.storedRules")(function* (projectID: ProjectID) {
+      const rows = yield* saved.list({ projectID })
+      return rows.map((row): PermissionV1.Rule => ({ permission: row.action, pattern: row.resource, action: "allow" }))
+    })
 
+    const ask = Effect.fn("Permission.ask")(function* (input: PermissionV1.AskInput) {
+      const { projectID, pending } = yield* InstanceState.get(state)
+      const { ruleset, ...request } = input
+      const undecided: string[] = []
+
+      // Stage 1: configured/caller rules. A deny here is final and can never be overridden by a stored approval.
       for (const pattern of request.patterns) {
-        const rule = evaluate(request.permission, pattern, ruleset, approved)
+        const rule = evaluate(request.permission, pattern, ruleset)
         yield* Effect.logInfo("evaluated", { permission: request.permission, pattern, action: rule })
         if (rule.action === "deny") {
           return yield* new PermissionV1.DeniedError({
@@ -78,8 +96,14 @@ const layer = Layer.effect(
           })
         }
         if (rule.action === "allow") continue
-        needsAsk = true
+        undecided.push(pattern)
       }
+
+      if (undecided.length === 0) return
+
+      // Stage 2: stored "always" approvals for this project, the single source of truth when config does not decide.
+      const stored = yield* storedRules(projectID)
+      const needsAsk = undecided.some((pattern) => evaluate(request.permission, pattern, stored).action !== "allow")
 
       if (!needsAsk) return
 
@@ -107,7 +131,7 @@ const layer = Layer.effect(
     })
 
     const reply = Effect.fn("Permission.reply")(function* (input: PermissionV1.ReplyInput) {
-      const { approved, pending } = yield* InstanceState.get(state)
+      const { projectID, pending } = yield* InstanceState.get(state)
       const existing = pending.get(input.requestID)
       if (!existing) return yield* new PermissionV1.NotFoundError({ requestID: input.requestID })
 
@@ -142,13 +166,12 @@ const layer = Layer.effect(
       yield* Deferred.succeed(existing.deferred, undefined)
       if (input.reply === "once") return
 
-      for (const pattern of existing.info.always) {
-        approved.push({
-          permission: existing.info.permission,
-          pattern,
-          action: "allow",
-        })
-      }
+      yield* saved.add({
+        projectID,
+        action: existing.info.permission,
+        resources: existing.info.always,
+      })
+      const approved = yield* storedRules(projectID)
 
       for (const [id, item] of pending.entries()) {
         if (item.info.sessionID !== existing.info.sessionID) continue
@@ -171,7 +194,19 @@ const layer = Layer.effect(
       return Array.from(pending.values(), (item) => item.info)
     })
 
-    return Service.of({ ask, reply, list })
+    const approvals = Effect.fn("Permission.approvals")(function* () {
+      const { projectID } = yield* InstanceState.get(state)
+      return yield* saved.list({ projectID })
+    })
+
+    const removeApprovals = Effect.fn("Permission.removeApprovals")(function* (id: ApprovalID) {
+      const { projectID } = yield* InstanceState.get(state)
+      const rows = yield* saved.list({ projectID })
+      if (!rows.some((row) => row.id === id)) return
+      yield* saved.remove(id)
+    })
+
+    return Service.of({ ask, reply, list, approvals, removeApprovals })
   }),
 )
 
@@ -218,6 +253,6 @@ export function visibleTools<T>(tools: Record<string, T>, ruleset: PermissionV1.
   return Object.fromEntries(Object.entries(tools).filter(([name]) => !hidden.has(name)))
 }
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [EventV2Bridge.node] })
+export const node = LayerNode.make({ service: Service, layer: layer, deps: [EventV2Bridge.node, PermissionSaved.node] })
 
 export * as Permission from "."

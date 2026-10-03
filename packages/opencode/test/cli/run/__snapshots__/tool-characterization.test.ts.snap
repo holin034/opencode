@@ -1,0 +1,139 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`built-in mini inline and scrollback formatting 1`] = `
+{
+  "final": "grep completed · 10ms",
+  "inline": {
+    "description": "in src · 2 matches",
+    "icon": "✱",
+    "title": "Grep "needle"",
+  },
+  "progress": "src/a:needle",
+  "snapshot": undefined,
+  "start": "✱ Grep "needle" in src",
+  "view": {
+    "final": false,
+    "output": false,
+  },
+}
+`;
+
+exports[`built-in mini live update and replay 1`] = `
+{
+  "live": {
+    "commits": [
+      {
+        "kind": "tool",
+        "messageID": "msg",
+        "part": {
+          "callID": "call",
+          "id": "part",
+          "messageID": "msg",
+          "sessionID": "session",
+          "state": {
+            "input": {
+              "path": "src",
+              "pattern": "needle",
+            },
+            "metadata": {
+              "matches": 2,
+            },
+            "output": "src/a:needle",
+            "status": "completed",
+            "time": {
+              "end": 11,
+              "start": 1,
+            },
+            "title": "",
+          },
+          "tool": "grep",
+          "type": "tool",
+        },
+        "partID": "part",
+        "phase": "start",
+        "source": "tool",
+        "text": "running grep",
+        "tool": "grep",
+        "toolState": "running",
+      },
+    ],
+    "data": {
+      "announced": false,
+      "call": 
+Map {
+        "msg:call" => {
+          "path": "src",
+          "pattern": "needle",
+        },
+      }
+,
+      "echo": Map {},
+      "end":       Set {},
+      "ids":       
+Set {
+        "part",
+      }
+,
+      "includeUserText": false,
+      "msg": Map {},
+      "part": Map {},
+      "permissions": [],
+      "questions": [],
+      "role": Map {},
+      "sent": Map {},
+      "shell": Map {},
+      "text": Map {},
+      "tools":       Set {},
+      "visible": Map {},
+    },
+  },
+  "replay": [
+    {
+      "kind": "tool",
+      "messageID": "msg",
+      "part": {
+        "callID": "call",
+        "id": "part",
+        "messageID": "msg",
+        "sessionID": "session",
+        "state": {
+          "input": {
+            "path": "src",
+            "pattern": "needle",
+          },
+          "metadata": {
+            "matches": 2,
+          },
+          "output": "src/a:needle",
+          "status": "completed",
+          "time": {
+            "end": 11,
+            "start": 1,
+          },
+          "title": "",
+        },
+        "tool": "grep",
+        "type": "tool",
+      },
+      "partID": "part",
+      "phase": "start",
+      "source": "tool",
+      "text": "running grep",
+      "tool": "grep",
+      "toolState": "running",
+    },
+    {
+      "kind": "system",
+      "messageID": "msg",
+      "phase": "final",
+      "source": "system",
+      "summary": {
+        "agent": "Build",
+        "duration": "10ms",
+        "model": "test",
+      },
+      "text": "▣ Build · test · 10ms",
+    },
+  ],
+}
+`;

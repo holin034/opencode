@@ -1,3 +1,4 @@
+import type { ToolOrigin } from "@opencode-ai/core/util/tool-presentation"
 import { PermissionV1 } from "@opencode-ai/core/v1/permission"
 import { Effect, Schema } from "effect"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
@@ -57,6 +58,7 @@ export interface Def<
   M extends Metadata = Metadata,
 > {
   id: string
+  origin?: ToolOrigin
   description: string
   parameters: Parameters
   jsonSchema?: JSONSchema7

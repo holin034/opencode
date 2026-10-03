@@ -99,7 +99,7 @@ const [store, setStore] = createStore<State>({
 
 subscribeThemes((themes) => setStore("themes", themes))
 
-export const { use: useTheme, provider: ThemeProvider } = createSimpleContext({
+export const { context: ThemeContext, use: useTheme, provider: ThemeProvider } = createSimpleContext({
   name: "Theme",
   init: (props: { mode: "dark" | "light"; source?: ThemeSource }) => {
     const renderer = useRenderer()

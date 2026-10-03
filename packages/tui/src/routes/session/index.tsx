@@ -1,3 +1,4 @@
+import { ToolPresentation } from "@opencode-ai/core/util/tool-presentation"
 import {
   batch,
   createContext,
@@ -153,7 +154,7 @@ const sessionGlobalBindingCommands = [
 
 const sessionGlobalUnfocusedBindingCommands = ["session.first", "session.last"] as const
 
-const context = createContext<{
+export const SessionToolContext = createContext<{
   width: number
   sessionID: string
   conceal: () => boolean
@@ -169,7 +170,7 @@ const context = createContext<{
 }>()
 
 function use() {
-  const ctx = useContext(context)
+  const ctx = useContext(SessionToolContext)
   if (!ctx) throw new Error("useContext must be used within a Session component")
   return ctx
 }
@@ -1156,7 +1157,7 @@ export function Session() {
 
   return (
     <LocationProvider location={location()}>
-      <context.Provider
+      <SessionToolContext.Provider
         value={{
           get width() {
             return contentWidth()
@@ -1356,7 +1357,7 @@ export function Session() {
             </Switch>
           </Show>
         </box>
-      </context.Provider>
+      </SessionToolContext.Provider>
     </LocationProvider>
   )
 }
@@ -1577,7 +1578,7 @@ function AssistantMessage(props: { message: AssistantMessage; parts: Part[]; las
 
 const PART_MAPPING = {
   text: TextPart,
-  tool: ToolPart,
+  tool: SessionToolPart,
   reasoning: ReasoningPart,
 }
 
@@ -1706,9 +1707,9 @@ function TextPart(props: { last: boolean; part: TextPart; message: AssistantMess
 
 // Pending messages moved to individual tool pending functions
 
-function ToolPart(props: { last: boolean; part: ToolPart; message: AssistantMessage }) {
+export function SessionToolPart(props: { last: boolean; part: ToolPart; message: AssistantMessage }) {
   const ctx = use()
-  const display = createMemo(() => toolDisplay(props.part.tool))
+  const display = createMemo(() => toolDisplay(props.part.tool, props.part.metadata?.toolPresentation))
 
   // Hide tool if showDetails is false and tool completed successfully
   const shouldHide = createMemo(() => {
@@ -1798,6 +1799,9 @@ type ToolProps = {
 function GenericTool(props: ToolProps) {
   const { theme } = useTheme()
   const ctx = use()
+  const presentation = createMemo(() =>
+    ToolPresentation.describe(props.tool, props.input, props.part.metadata?.toolPresentation),
+  )
   const output = createMemo(() => props.output?.trim() ?? "")
   const [expanded, setExpanded] = createSignal(false)
   const maxLines = 3
@@ -1813,12 +1817,12 @@ function GenericTool(props: ToolProps) {
       when={props.output && ctx.showGenericToolOutput()}
       fallback={
         <InlineTool icon="⚙" pending="Writing command…" complete={true} part={props.part}>
-          {props.tool} {input(props.input)}
+          {presentation().name} {presentation().summary}
         </InlineTool>
       }
     >
       <BlockTool
-        title={`# ${props.tool} ${input(props.input)}`}
+        title={`# ${presentation().name}${presentation().summary ? " " + presentation().summary : ""}`}
         part={props.part}
         onClick={collapsed().overflow ? () => setExpanded((prev) => !prev) : undefined}
       >
@@ -2623,25 +2627,8 @@ function numberValue(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined
 }
 
-const toolDisplays = new Set([
-  "bash",
-  "glob",
-  "read",
-  "grep",
-  "webfetch",
-  "websearch",
-  "write",
-  "edit",
-  "task",
-  "apply_patch",
-  "todowrite",
-  "question",
-  "skill",
-  "execute",
-])
-
-export function toolDisplay(tool: string) {
-  return toolDisplays.has(tool) ? tool : "generic"
+export function toolDisplay(tool: string, origin?: unknown) {
+  return ToolPresentation.renderer(tool, "tui", origin)
 }
 
 function recordValue(value: unknown): Record<string, unknown> | undefined {

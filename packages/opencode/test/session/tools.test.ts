@@ -52,6 +52,8 @@ const fakePermission = Permission.Service.of({
   ask: () => Effect.void,
   reply: () => Effect.void,
   list: () => Effect.succeed([]),
+  approvals: () => Effect.succeed([]),
+  removeApprovals: () => Effect.void,
 } satisfies Permission.Interface)
 
 const fakeTruncate = Truncate.Service.of({
@@ -77,6 +79,7 @@ const layer = Layer.mergeAll(
         Effect.succeed([
           {
             id: "timing",
+            origin: { kind: "custom", namespace: "timing", tool: "default" },
             description: "updates metadata more than once",
             parameters: Schema.Struct({}),
             jsonSchema: { type: "object", properties: {} },
@@ -135,7 +138,7 @@ it.effect("preserves running tool start time across metadata updates", () =>
       completeToolCall: () => Effect.void,
     } satisfies Pick<SessionProcessor.Handle, "message" | "updateToolCall" | "completeToolCall">
 
-    const tools = yield* SessionTools.resolve({
+    const { tools, origins } = yield* SessionTools.resolve({
       agent,
       model,
       session: { id: sessionID, permission: [] } as unknown as Session.Info,
@@ -144,6 +147,8 @@ it.effect("preserves running tool start time across metadata updates", () =>
       messages: [],
       promptOps: {} as never,
     })
+    expect(origins.timing).toEqual({ kind: "custom", namespace: "timing", tool: "default" })
+    expect(tools.timing).not.toHaveProperty("origin")
     const execute = tools.timing.execute
     if (!execute) throw new Error("timing tool is missing execute")
 

@@ -1,3 +1,4 @@
+import { ToolPresentation, type ToolRenderer } from "@opencode-ai/core/util/tool-presentation"
 // Per-tool display rules shared across `opencode run` output paths.
 //
 // Each known tool (bash, edit, write, task, etc.) has a ToolRule that controls
@@ -50,6 +51,7 @@ export type ToolDict = Record<string, unknown>
 export type ToolFrame = {
   raw: string
   name: string
+  origin?: unknown
   input: ToolDict
   meta: ToolDict
   state: ToolDict
@@ -112,7 +114,7 @@ type ToolDefs = {
   plan_exit: typeof PlanExitTool
 }
 
-type ToolName = keyof ToolDefs
+type ToolName = Exclude<ToolRenderer<"mini">, "generic">
 
 type ToolRule<T = Tool.Info> = {
   view: ToolView
@@ -222,17 +224,17 @@ function toolError(ctx: ToolFrame): string {
 }
 
 function fallbackStart(ctx: ToolFrame): string {
-  const extra = info(ctx.input)
-  if (!extra) {
-    return `⚙ ${ctx.name}`
+  if (rule(ctx.name, ctx.origin)) {
+    const extra = info(ctx.input)
+    return `⚙ ${ctx.name}${extra ? " " + extra : ""}`
   }
-
-  return `⚙ ${ctx.name} ${extra}`
+  return `⚙ ${fallbackLabel(ctx)}`
 }
 
 function fallbackFinal(ctx: ToolFrame): string {
+  const label = rule(ctx.name, ctx.origin) ? ctx.name : fallbackLabel(ctx)
   if (ctx.status === "error") {
-    return fail(ctx)
+    return fail({ ...ctx, name: label })
   }
 
   if (ctx.status && ctx.status !== "completed") {
@@ -241,10 +243,10 @@ function fallbackFinal(ctx: ToolFrame): string {
 
   const time = span(ctx.state)
   if (!time) {
-    return `${ctx.name} completed`
+    return `${label} completed`
   }
 
-  return `${ctx.name} completed · ${time}`
+  return `${label} completed · ${time}`
 }
 
 export function toolPath(input?: string, opts: { home?: boolean } = {}): string {
@@ -272,13 +274,17 @@ export function toolPath(input?: string, opts: { home?: boolean } = {}): string 
   return abs.replaceAll("\\", "/")
 }
 
-function fallbackInline(ctx: ToolFrame): ToolInline {
-  const title = text(ctx.state.title) || (Object.keys(ctx.input).length > 0 ? JSON.stringify(ctx.input) : "Unknown")
+function fallbackLabel(ctx: ToolFrame) {
+  const description = ToolPresentation.describe(ctx.name, ctx.input, ctx.origin)
+  return description.name + (description.summary ? " " + description.summary : "")
+}
 
-  return {
-    icon: "⚙",
-    title: `${ctx.name} ${title}`,
+function fallbackInline(ctx: ToolFrame): ToolInline {
+  if (rule(ctx.name, ctx.origin)) {
+    const title = text(ctx.state.title) || (Object.keys(ctx.input).length > 0 ? JSON.stringify(ctx.input) : "Unknown")
+    return { icon: "⚙", title: `${ctx.name} ${title}` }
   }
+  return { icon: "⚙", title: fallbackLabel(ctx) }
 }
 
 function count(n: number, label: string): string {
@@ -1231,16 +1237,11 @@ const TOOL_RULES = {
   },
 } as const satisfies ToolRegistry
 
-function key(name: string): name is ToolName {
-  return Object.prototype.hasOwnProperty.call(TOOL_RULES, name)
-}
-
-function rule(name?: string): AnyToolRule | undefined {
-  if (!name || !key(name)) {
-    return undefined
-  }
-
-  return TOOL_RULES[name]
+function rule(name?: string, origin?: unknown): AnyToolRule | undefined {
+  if (!name) return
+  const key = ToolPresentation.renderer(name, "mini", origin)
+  if (key === "generic") return
+  return TOOL_RULES[key]
 }
 
 function frame(part: ToolPart): ToolFrame {
@@ -1248,6 +1249,7 @@ function frame(part: ToolPart): ToolFrame {
   return {
     raw: "",
     name: part.tool,
+    origin: part.metadata?.toolPresentation,
     input: dict(state.input),
     meta: "metadata" in part.state ? dict(part.state.metadata) : {},
     state,
@@ -1261,6 +1263,7 @@ export function toolFrame(commit: StreamCommit, raw: string): ToolFrame {
   return {
     raw,
     name: commit.tool || commit.part?.tool || "tool",
+    origin: commit.part?.metadata?.toolPresentation,
     input: dict(state.input),
     meta: commit.part?.state && "metadata" in commit.part.state ? dict(commit.part.state.metadata) : {},
     state,
@@ -1278,9 +1281,9 @@ function runBash(p: ToolProps<typeof BashTool>): ToolInline {
   }
 }
 
-export function toolView(name?: string): ToolView {
+export function toolView(name?: string, origin?: unknown): ToolView {
   return (
-    rule(name)?.view ?? {
+    rule(name, origin)?.view ?? {
       output: true,
       final: true,
     }
@@ -1293,13 +1296,13 @@ export function toolStructuredFinal(commit: StreamCommit): boolean {
     commit.kind === "tool" &&
     commit.phase === "final" &&
     state === "completed" &&
-    Boolean(toolView(commit.tool ?? commit.part?.tool).snap)
+    Boolean(toolView(commit.tool ?? commit.part?.tool, commit.part?.metadata?.toolPresentation).snap)
   )
 }
 
 export function toolInlineInfo(part: ToolPart): ToolInline {
   const ctx = frame(part)
-  const draw = rule(ctx.name)?.run
+  const draw = rule(ctx.name, ctx.origin)?.run
   try {
     if (draw) {
       return draw(props(ctx))
@@ -1312,7 +1315,7 @@ export function toolInlineInfo(part: ToolPart): ToolInline {
 }
 
 export function toolScroll(phase: ToolPhase, ctx: ToolFrame): string {
-  const draw = rule(ctx.name)?.scroll?.[phase]
+  const draw = rule(ctx.name, ctx.origin)?.scroll?.[phase]
   try {
     if (draw) {
       return draw(props(ctx))
@@ -1358,7 +1361,7 @@ export function toolPermissionInfo(
 
 export function toolSnapshot(commit: StreamCommit, raw: string): ToolSnapshot | undefined {
   const ctx = toolFrame(commit, raw)
-  const draw = rule(ctx.name)?.snap
+  const draw = rule(ctx.name, ctx.origin)?.snap
   if (!draw) {
     return undefined
   }
@@ -1431,9 +1434,9 @@ export function toolEntryBody(commit: StreamCommit, raw: string): RunEntryBody |
   }
 
   const ctx = toolFrame(commit, raw)
-  const view = toolView(ctx.name)
+  const view = toolView(ctx.name, ctx.origin)
 
-  if (ctx.name === "task") {
+  if (ToolPresentation.renderer(ctx.name, "mini", ctx.origin) === "task") {
     if (commit.phase === "start") {
       return undefined
     }

@@ -1,3 +1,4 @@
+import type { ToolOrigin } from "@opencode-ai/core/util/tool-presentation"
 import { LayerNode } from "@opencode-ai/core/effect/layer-node"
 import { httpClient } from "@opencode-ai/core/effect/app-node-platform"
 import { Ripgrep } from "@opencode-ai/core/ripgrep"
@@ -122,7 +123,7 @@ const layer = Layer.effect(
       Effect.fn("ToolRegistry.state")(function* (ctx) {
         const custom: Tool.Def[] = []
 
-        function fromPlugin(id: string, def: ToolDefinition): Tool.Def {
+        function fromPlugin(id: string, def: ToolDefinition, origin?: ToolOrigin): Tool.Def {
           // Plugin tools still expose Zod args publicly; keep that compatibility
           // boxed at the registry boundary and give the LLM the original JSON Schema.
           // Normalize missing args to `{}` once — pre-1.14.49 the code was
@@ -137,6 +138,7 @@ const layer = Layer.effect(
             : Schema.Unknown
           return {
             id,
+            origin,
             parameters,
             jsonSchema,
             description: def.description,
@@ -192,7 +194,13 @@ const layer = Layer.effect(
           const mod = yield* Effect.promise(() => import(pathToFileURL(match).href))
           for (const [id, def] of Object.entries(mod)) {
             if (!isPluginTool(def)) continue
-            custom.push(fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def))
+            custom.push(
+              fromPlugin(id === "default" ? namespace : `${namespace}_${id}`, def, {
+                kind: "custom",
+                namespace,
+                tool: id,
+              }),
+            )
           }
         }
 
@@ -322,6 +330,7 @@ const layer = Layer.effect(
               : undefined
           return {
             id: tool.id,
+            origin: tool.origin,
             description: [
               output.description,
               tool.id === TaskTool.id ? yield* describeTask(input.agent) : undefined,

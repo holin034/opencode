@@ -1,3 +1,4 @@
+import type { ToolOrigin } from "@opencode-ai/core/util/tool-presentation"
 import { Agent } from "@/agent/agent"
 import { SessionV1 } from "@opencode-ai/core/v1/session"
 import { Provider } from "@/provider/provider"
@@ -48,6 +49,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   promptOps: TaskPromptOps
 }) {
   const tools: Record<string, AITool> = {}
+  const origins: Record<string, ToolOrigin> = Object.create(null)
   const run = yield* EffectBridge.make()
   const plugin = yield* Plugin.Service
   const permission = yield* Permission.Service
@@ -95,6 +97,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     agent: input.agent,
     permission: input.session.permission,
   })) {
+    if (item.origin) origins[item.id] = item.origin
     const schema = ProviderTransform.schema(input.model, ToolJsonSchema.fromTool(item))
     tools[item.id] = tool({
       description: item.description,
@@ -385,9 +388,10 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     })
   }
 
-  if (flags.experimentalCodeMode) return tools
+  if (flags.experimentalCodeMode) return { tools, origins }
 
   for (const [key, entry] of Object.entries(yield* mcp.tools())) {
+    if (entry.server) origins[key] = { kind: "mcp", server: entry.server, tool: entry.def.name }
     const item = McpCatalog.convertTool(entry.def, entry.client, entry.timeout)
     const execute = item.execute
     if (!execute) continue
@@ -489,7 +493,7 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
     tools[key] = item
   }
 
-  return tools
+  return { tools, origins }
 })
 
 function toRecord(value: unknown) {

@@ -1,0 +1,12 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`actual built-in inline dispatch stays unchanged 1`] = `"   ✱ Grep "needle" in src (2 matches)"`;
+
+exports[`actual built-in block dispatch stays unchanged 1`] = `
+"
+┃
+┃  $ printf hello
+┃
+┃  hello
+┃"
+`;

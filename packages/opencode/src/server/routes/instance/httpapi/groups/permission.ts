@@ -28,6 +28,27 @@ export const PermissionApi = HttpApi.make("permission")
             description: "Get all pending permission requests across all sessions.",
           }),
         ),
+        HttpApiEndpoint.get("approvals", `${root}/approval`, {
+          query: WorkspaceRoutingQuery,
+          success: described(Schema.Array(Permission.Approval), "List of stored approvals for the project"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "permission.approvals",
+            summary: "List stored approvals",
+            description: 'Get all stored "always allow" approvals for the current project.',
+          }),
+        ),
+        HttpApiEndpoint.delete("removeApproval", `${root}/approval/:id`, {
+          params: { id: Permission.ApprovalID },
+          query: WorkspaceRoutingQuery,
+          success: described(Schema.Boolean, "Stored approval removed"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "permission.approvals.remove",
+            summary: "Remove stored approval",
+            description: 'Remove a stored "always allow" approval so the user is prompted again.',
+          }),
+        ),
         HttpApiEndpoint.post("reply", `${root}/:requestID/reply`, {
           params: { requestID: PermissionV1.ID },
           query: WorkspaceRoutingQuery,
