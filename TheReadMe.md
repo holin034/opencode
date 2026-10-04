@@ -78,4 +78,22 @@ The focused checks cover 0 matches, exactly the limit, and one over the limit. T
 **Team integration:** Issue #1 was merged into the team’s `main` branch. The combined version passed the repository typecheck with 30 successful tasks.
 
 
+**Issue 7**:
+
+**Change:** `opencode export` takes a new `--format` option: `json` (the default, unchanged) or `md`, which prints a readable transcript covering all 12 message part types. `export.ts` was split into an `export/` module. Redaction (`sanitize`) runs once, then a renderer is chosen from a `FORMATS` map (Strategy pattern), so adding a format means one new renderer and one map entry. `--sanitize` works with both formats. `opencode import` stays JSON-only and explains this when given a `.md` file.
+
+**Checks:** Run each command from the repository root:  
+`(cd packages/opencode && bun test test/cli/export.test.ts test/cli/import.test.ts test/cli/help)`  
+`bun run typecheck`  
+
+The focused checks pin the existing `sanitize` and JSON output with snapshots, round-trip a JSON export through the schemas `import` uses, and cover Markdown for every part type, an empty session, and tool output that contains code fences. A leak test checks that sanitized Markdown never shows a secret that sanitized JSON hides.
+
+**Results:** At commit `3416b0ad723c2fdd87b546e7ecb5aa6224857ce3`, all 19 tests above passed and all 30 repository type-check tasks passed. The default and `--sanitize` JSON output of `opencode export` is byte-identical to the output before the change. An unknown format such as `--format nope` fails and lists the valid formats.
+
+**RFC differences:** Following reviewer feedback, import stays JSON-only, so the round-trip test uses JSON instead of Markdown, and `import.ts` gained a hint for `.md` files that the RFC had not planned. `sanitize` was not moved fully unchanged. It gained an exhaustive `never` check so a new part type cannot skip redaction, and `diff()` got type-only overloads because its old type dropped fields the code kept. `--format` is validated before the session picker, because inside the existing error handler a bad value was reported as "Session not found".
+
+**Limits:** `--sanitize` does not redact tool error messages or retry error bodies, in either format. This was already true before the change, and fixing it would change JSON output, so it is left for a separate issue. Markdown exports cannot be imported. The translated CLI docs do not mention `--format`.
+
+**Team integration:** Issue 7 was merged into the team's `main` after issues 1, 4 and 12, without conflicts, since none of them touch the export files. The combined version passed the focused tests for all four issues and the repository typecheck with 30 successful tasks.
+
 We tested the latest main at 37351a39d with all four features merged. The Core, OpenCode, and TUI suites passed 4,925 tests in all, along with all 30 type checks and the focused tests for each feature. An extra Schema package check then failed four tests. Two event-manifest tests still expect 55 server events while the code has 58, and that mismatch was already in the course snapshot. The other two fail because this project sits in a folder named "Design Pattern", and the tests turn the space into %20 and cannot open the folder. None of our four features change those files and create no error, and the errors come from the original codebase.
