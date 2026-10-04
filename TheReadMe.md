@@ -76,3 +76,6 @@ The focused checks cover 0 matches, exactly the limit, and one over the limit. T
 **Limits:** The change only affects grep, glob, and the `/find` text-search path. `/find/file` is unchanged. Existing callers that do not need truncation information continue to receive arrays through their wrappers, and the `/find` response body stays backward compatible.
 
 **Team integration:** Issue #1 was merged into the team’s `main` branch. The combined version passed the repository typecheck with 30 successful tasks.
+
+
+We tested the latest main at 37351a39d with all four features merged. The Core, OpenCode, and TUI suites passed 4,925 tests in all, along with all 30 type checks and the focused tests for each feature. An extra Schema package check then failed four tests. Two event-manifest tests still expect 55 server events while the code has 58, and that mismatch was already in the course snapshot. The other two fail because this project sits in a folder named "Design Pattern", and the tests turn the space into %20 and cannot open the folder. None of our four features change those files and create no error, and the errors come from the original codebase.
